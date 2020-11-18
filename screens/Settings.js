@@ -21,7 +21,7 @@ export default class Settings extends React.Component {
         end={{ x: 0.25, y: 1.1 }}
         locations={[0.2, 1]}
         colors={['#000000', '#000000']}
-        style={[styles.signin, {flex: 1, paddingTop: theme.SIZES.BASE * 4}]}>
+        style={[styles.signin, {flex: 1, paddingTop: 10}]}>
         <ScrollView vertical={true} showsVerticalScrollIndicator={false}>
       <Block flex style={styles.profile}>
         <ImageBackground
@@ -102,7 +102,7 @@ export default class Settings extends React.Component {
               </Block>
               <Block row space="between">
                 <Block flex={1}>
-                  <Button color={materialTheme.COLORS.INFO} style={{width:370}}>Change Location</Button>
+                  <Button color={materialTheme.COLORS.INFO}>Change Location</Button>
                   <MapView style={styles.mapStyle} />
                 </Block>
               </Block>
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   mapStyle: {
-    width: 300,
+    // width: 300,
     height:200,
     marginTop:12,
     marginBottom:12

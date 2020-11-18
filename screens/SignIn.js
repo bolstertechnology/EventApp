@@ -152,7 +152,7 @@ export default class SignIn extends React.Component {
                 <Button color="transparent" shadowless onPress={() => navigation.navigate('Sign Up')}>
                   <Text
                     center
-                    color={theme.COLORS.BLACK}
+                    color={theme.COLORS.WHITE}
                     size={theme.SIZES.FONT}
                     style={{marginTop:20}}
                   >
