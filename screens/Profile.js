@@ -9,8 +9,26 @@ import { HeaderHeight } from "../constants/utils";
 
 const { width } = Dimensions.get('screen');
 const thumbMeasure = (width - 48 - 32) / 3;
+import { compose } from "recompose"
+import { connect } from 'react-redux'
+import withLoadingScreen from '../HOC/spinner';
 
-export default class Profile extends React.Component {
+class Profile extends React.Component {
+
+  state = {
+    userName: '',
+    email: '',
+    location: '',
+  } 
+  
+  componentDidMount() {
+    console.log("profileData",this.props.profileData)
+    this.setState({
+      userName: this.props.profileData && this.props.profileData.userDetail.fullName,
+      email: this.props.profileData && this.props.profileData.userDetail.email
+    })
+  }
+
   render() {
     return (
       <LinearGradient
@@ -18,7 +36,7 @@ export default class Profile extends React.Component {
         end={{ x: 0.25, y: 1.1 }}
         locations={[0.2, 1]}
         colors={['#000000', '#000000']}
-        style={[styles.signin, {flex: 1, paddingTop: theme.SIZES.BASE * 4}]}>
+        style={[styles.signin, {flex: 1, paddingTop: 10}]}>
       <Block flex style={styles.profile}>
         <ImageBackground
           source={{ uri: Images.Profile }}
@@ -26,11 +44,11 @@ export default class Profile extends React.Component {
           imageStyle={styles.profileImage}>
           <Block flex style={styles.profileDetails}>
             <Block style={styles.profileTexts}>
-              <Text color="white" size={28} style={{ paddingBottom: 8 }}>Rachel Brown</Text>
+              <Text color="white" size={28} style={{ paddingBottom: 8 }}>{this.state.userName}</Text>
               <Block row space="between">
-                <Block row>
-                  <Text color="white" size={16} muted style={styles.seller}>user@gmail.com</Text>
-                </Block>
+                {/* <Block row>
+                  <Text color="white" size={16} muted style={styles.seller}>{this.state.email}</Text>
+                </Block> */}
                 <Block>
                   <Text color={theme.COLORS.MUTED} size={16}>
                     <Icon name="map-marker" family="font-awesome" color={theme.COLORS.MUTED} size={16} />
@@ -41,7 +59,7 @@ export default class Profile extends React.Component {
               <Block row space="between">
                   <Block row>
                     <Text color={theme.COLORS.MUTED} size={16}>
-                      Followers 10
+                      Followers (10)
                     </Text>
                   </Block>
               </Block>
@@ -82,7 +100,7 @@ export default class Profile extends React.Component {
 
 const styles = StyleSheet.create({
   profile: {
-    marginTop: Platform.OS === 'android' ? -HeaderHeight : 0,
+    marginTop: 0,
   },
   profileImage: {
     width: width * 1.1,
@@ -146,3 +164,21 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
 });
+
+const mapDispatchToProps = (dispatch) => ({
+  getProfileData: (data) => dispatch(profileApiCall(data)),
+})
+
+const mapStateToProps = (state) => ({
+  profileData: state.profileData,
+})
+
+const container = compose(
+  connect(
+      mapStateToProps,
+      mapDispatchToProps
+  ),
+  withLoadingScreen
+)
+
+export default compose(container)(Profile)

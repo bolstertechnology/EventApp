@@ -1,18 +1,23 @@
 import React from 'react';
 import { StyleSheet, Dimensions, KeyboardAvoidingView, Alert, Platform } from 'react-native';
 import { Block, Button, Input, Text, theme } from 'galio-framework';
-
+import { View, ActivityIndicator } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { materialTheme } from '../constants/';
 import { HeaderHeight } from "../constants/utils";
 import { StackActions } from '@react-navigation/native';
+import { compose } from "recompose"
+
+import { callLogin } from '../actions';
+import { connect } from 'react-redux'
+import withLoadingScreen from '../HOC/spinner';
 
 const { width } = Dimensions.get('window');
 
-export default class SignIn extends React.Component {
+class SignIn extends React.Component {
   state = {
-    email: '-',
-    password: '-',
+    email: "admin",
+    password: "Admin@123",
     active: {
       email: false,
       password: false,
@@ -30,6 +35,35 @@ export default class SignIn extends React.Component {
     this.setState({ active });
   }
 
+  handleLogin () {
+    
+    const {
+      email, password
+    } = this.state
+    const { navigation } = this.props;
+    if (email.length === 0 || password.length === 0) {
+      Alert.alert("Please provide email and password")
+      return
+    }
+    const request = {
+      userName: email,
+      password: password,
+      callback: (response) => {
+        if (response.success) {
+          navigation.dispatch(
+            StackActions.replace('Home', {
+          }));
+        } else {
+          Alert.alert(response.message)
+        }     
+      }
+    }
+    // navigation.dispatch(
+    //   StackActions.replace('Home', {
+    // }));
+    this.props.callLogin(request)
+  }
+
   render() {
     const { navigation } = this.props;
     const { email, password } = this.state;
@@ -40,12 +74,12 @@ export default class SignIn extends React.Component {
         end={{ x: 0.25, y: 1.1 }}
         locations={[0.2, 1]}
         colors={['#000000', '#000000']}
-        style={[styles.signin, {flex: 1, paddingTop: theme.SIZES.BASE * 4}]}>
-        <Block flex middle>
+        style={[styles.signin, {flex: 1, paddingTop: theme.SIZES.BASE * 4}]}>           
+        <Block flex middle>    
           <KeyboardAvoidingView behavior="padding" enabled>
             <Block middle>
               <Block row center space="between" style={{ marginVertical: theme.SIZES.BASE * 0.1 }}>
-                <Block flex middle right>
+                {/* <Block flex middle right>
                   <Button
                     round
                     onlyIcon
@@ -86,7 +120,7 @@ export default class SignIn extends React.Component {
                     style={styles.social}
                     onPress={() => Alert.alert('Not implemented')}
                   />
-                </Block>
+                </Block> */}
               </Block>
             </Block>
             <Block middle style={{ paddingVertical: theme.SIZES.BASE * 2.625}}>
@@ -98,14 +132,14 @@ export default class SignIn extends React.Component {
               <Block center>
                 <Input
                   borderless
-                  color="black"
+                  color="white"
                   placeholder="Email"
-                  type="email-address"
                   autoCapitalize="none"
                   bgColor='transparent'
+                  value={email}
                   onBlur={() => this.toggleActive('email')}
                   onFocus={() => this.toggleActive('email')}
-                  placeholderTextColor={materialTheme.COLORS.PLACEHOLDER}
+                  placeholderTextColor={theme.COLORS.MUTED}
                   onChangeText={text => this.handleChange('email', text)}
                   style={[styles.input, this.state.active.email ? styles.inputActive : null]}
                 />
@@ -113,13 +147,14 @@ export default class SignIn extends React.Component {
                   password
                   viewPass
                   borderless
-                  color="black"
-                  iconColor="black"
+                  color="white"
+                  iconColor="white"
                   placeholder="Password"
                   bgColor='transparent'
+                  value={password}
                   onBlur={() => this.toggleActive('password')}
                   onFocus={() => this.toggleActive('password')}
-                  placeholderTextColor={materialTheme.COLORS.PLACEHOLDER}
+                  placeholderTextColor={theme.COLORS.MUTED}
                   onChangeText={text => this.handleChange('password', text)}
                   style={[styles.input, this.state.active.password ? styles.inputActive : null]}
                 />
@@ -138,10 +173,11 @@ export default class SignIn extends React.Component {
                   color={materialTheme.COLORS.BUTTON_COLOR}
                   style={{ height: 48 }}
                   onPress={() => 
-                  navigation.dispatch(
-                    StackActions.replace('Home', {
-                    })
-                  )}
+                  {
+                    this.handleLogin()
+                  }
+                  
+                  }
                 >
                   {/* Alert.alert('Sign in action',`Email: ${email} Password: ${password}`,) */}
                   <Text
@@ -157,6 +193,16 @@ export default class SignIn extends React.Component {
                     style={{marginTop:20}}
                   >
                     {"Don't have an account? Sign Up"}
+                  </Text>
+                </Button>
+                <Button color="transparent" shadowless onPress={() => navigation.navigate('FORGOT PASSWORD')}>
+                  <Text
+                    center
+                    color={theme.COLORS.WHITE}
+                    size={theme.SIZES.FONT}
+                    style={{marginTop:20}}
+                  >
+                    {"Forgot Password?"}
                   </Text>
                 </Button>
               </Block>
@@ -195,3 +241,21 @@ const styles = StyleSheet.create({
     borderBottomColor: "white",
   },
 });
+
+const mapDispatchToProps = (dispatch) => ({
+  callLogin: (data) => dispatch(callLogin(data)),
+})
+
+const mapStateToProps = (state) => ({
+  isLoading: state.isLoading,
+})
+
+const container = compose(
+  connect(
+      mapStateToProps,
+      mapDispatchToProps
+  ),
+  withLoadingScreen
+)
+
+export default compose(container)(SignIn)

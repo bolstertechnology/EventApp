@@ -1,20 +1,114 @@
 import React from 'react';
-import { StyleSheet, Dimensions, ScrollView, Image, ImageBackground, Platform } from 'react-native';
+import { StyleSheet, Dimensions, ScrollView, Image, ImageBackground, Platform, Alert } from 'react-native';
 import { Block, Text, theme, Button, Input } from 'galio-framework';
 import { LinearGradient } from 'expo-linear-gradient';
 
+import { compose } from "recompose"
+import { callUpdateProfile, profileApiCall } from '../actions';
+import { connect } from 'react-redux'
+import withLoadingScreen from '../HOC/spinner';
+
 import { Icon } from '../components';
 import { Images, materialTheme } from '../constants';
-import { HeaderHeight } from "../constants/utils";
+import { HeaderHeight, validatePassword } from "../constants/utils";
 import RNF_ImagePicker from '../components/RNF_ImagePicker';
 import MapView from 'react-native-maps';
 import { Picker } from 'react-native';
+import { Keyboard } from 'react-native'
+import {PasswordPopup} from './PasswordPopup';
 
 const { width } = Dimensions.get('screen');
 const thumbMeasure = (width - 48 - 32) / 3;
 
-export default class Settings extends React.Component {
+class Settings extends React.Component {
+
+  constructor(props) {
+    super(props);
+    this.state = { 
+      pickerHeight: 0,
+      userId: this.props.profileData && this.props.profileData.userDetail.userId,
+      userName: this.props.profileData && this.props.profileData.userDetail.userName,
+      fullName: this.props.profileData && this.props.profileData.userDetail.fullName,
+      email: this.props.profileData && this.props.profileData.userDetail.email,
+      imageURL: this.props.profileData && this.props.profileData.userDetail.imageURL,
+      miles: this.props.profileData && this.props.profileData.userDetail.miles,
+      address: this.props.profileData && this.props.profileData.userDetail.address,
+      locationLatLong: this.props.profileData && this.props.profileData.userDetail.locationLatLong,
+      // password: this.props.profileData && this.props.profileData.userDetail.password,
+      password: "Admin@123" ,
+
+      visiblePasswordModel: false,
+      active: {
+        userId: false,
+        userName: false,
+        fullName: false,
+        email: false,
+        imageURL: false,
+        miles: false,
+        address: false,
+        locationLatLong: false,
+        password: false,
+      }};
+  }
+
+  handleChange = (name, value) => {
+    this.setState({ [name]: value });
+  }
+
+  handleUpdateProfile () {
+    const {userId, userName, fullName, email, imageURL, miles, address, locationLatLong, password} = this.state
+    if (!password) {
+      Alert.alert("Please provide Password.")
+      return
+    }  else if (!(validatePassword(password))) {
+      Alert.alert("Password must contain One LowerCase and UpperCase Character, One Special Character & One Number.")
+      return
+    } else if (!fullName) {
+      Alert.alert("Please provide Full Name.")
+      return
+    } else if (!miles) {
+      Alert.alert("Please provide Miles.")
+      return
+    } else if (!address) {
+      Alert.alert("Please provide Address.")
+      return
+    } else if (!locationLatLong) {
+      Alert.alert("Please select Location.")
+      return
+    } 
+
+    // password.length === 0
+    const request = {
+      userId: userId,
+      userName: userName,
+      fullName: fullName,
+      email: email,
+      imageURL: imageURL,
+      miles: miles,
+      address: address,
+      locationLatLong: locationLatLong,
+      password: password,
+
+      callback: (response) => {
+        if (response.success) {   
+          Alert.alert("Profile Updated Successfully.")
+          this.props.getProfileData()
+          this.setState({})
+        } else {
+          Alert.alert(response.message)
+        }     
+      }
+    }
+    this.props.callUpdateProfile(request)
+  }
+
+  componentDidMount() {
+    console.log("profileData",this.props.profileData)
+  }
+
   render() {
+    // const pickerHeight = 0
+    const {userId, userName, fullName, email, imageURL, miles, address, locationLatLong, password} = this.state;
     return (
       <LinearGradient
         start={{ x: 0, y: 0 }}
@@ -30,15 +124,15 @@ export default class Settings extends React.Component {
           imageStyle={styles.profileImage}>
           <Block flex style={styles.profileDetails}>
             <Block style={styles.profileTexts}>
-              <Text color="white" size={28} style={{ paddingBottom: 8 }}>Rachel Brown</Text>
+              <Text color="white" size={28} style={{ paddingBottom: 8 }}>{this.props.profileData && this.props.profileData.userDetail.fullName}</Text>
               <Block row space="between">
                 <Block row>
-                  <Text color="white" size={16} muted style={styles.seller}>user@gmail.com</Text>
+                  <Text color="white" size={16} muted style={styles.seller}>{this.state.email}</Text>
                 </Block>
                 <Block>
                   <Text color={theme.COLORS.MUTED} size={16}>
                     <Icon name="map-marker" family="font-awesome" color={theme.COLORS.MUTED} size={16} />
-                    {`  `} Los Angeles, CA
+                    {`  `} {this.props.profileData && this.props.profileData.userDetail.address}
                   </Text>
                 </Block>
               </Block>
@@ -57,8 +151,18 @@ export default class Settings extends React.Component {
                     color="black"
                     password
                     viewPass
+                    value={"Admin@123"}
                     placeholder="Password"
                     iconColor="white"
+                    // style={[styles.input, this.state.active.password ? styles.inputActive : null]}
+                    onChangeText={text => this.handleChange('password', text)}
+                    // onBlur={() => this.toggleActive('password')}
+                    onFocus={() => 
+                      {
+                        Keyboard.dismiss()
+                        this.setState({visiblePasswordModel: true})
+                      }
+                    }
                   />
                 </Block>
               </Block>
@@ -69,23 +173,47 @@ export default class Settings extends React.Component {
                     bgColor='transparent'
                     placeholderTextColor={materialTheme.COLORS.PLACEHOLDER}
                     color="black"
-                    value="Rachel Brown"
+                    value={fullName}
                     autoCapitalize="none"
+                    // style={[styles.input, this.state.active.fullName ? styles.inputActive : null]}
+                    onChangeText={text => this.handleChange('fullName', text)}
+                    // onBlur={() => this.toggleActive('fullName')}
+                    // onFocus={() => this.toggleActive('fullName')}
                   />
                 </Block>
               </Block>
               <Block row space="between">
                 <Block flex={1}>
                   <Text bold size={14}>Miles</Text>
-                  <Picker
-                    selectedValue={"50 mile"}
-                    style={{ height: 50, width: 120,borderStyle:1 }}>
+                    <Input
+                    onFocus={()=>{
+                      Keyboard.dismiss()
+                      this.setState({
+                        pickerHeight: this.state.pickerHeight > 0 ? 0 : 200
+                      })
+                    }}
+                    bgColor='transparent'
+                    placeholderTextColor={materialTheme.COLORS.PLACEHOLDER}
+                    color="black"
+                    value={miles}
+                    autoCapitalize="none"
+                    // style={[styles.input, this.state.active.miles ? styles.inputActive : null]}
+                    onChangeText={text => this.handleChange('miles', text)}
+                    // onBlur={() => this.toggleActive('miles')}
+                    // onFocus={() => this.toggleActive('miles')}
+                  />
+                  {this.state.pickerHeight > 0 && <Picker    
+                                                                            
+                    selectedValue={miles}
+                    onValueChange={(text) => this.handleChange('miles', text)}
+                    style={{height: this.state.pickerHeight, bottom: 0, left: 0, right: 0 }}
+                    >
                     <Picker.Item label="5 mile" value="5" />
                     <Picker.Item label="10 mile" value="10" />
                     <Picker.Item label="25 mile" value="25" />
                     <Picker.Item label="100 mile" value="100" />
                     <Picker.Item label="150 mile" value="150" />
-                  </Picker>
+                  </Picker>}
                 </Block>
               </Block>
               <Block row space="between">
@@ -95,39 +223,57 @@ export default class Settings extends React.Component {
                     bgColor='transparent'
                     placeholderTextColor={materialTheme.COLORS.PLACEHOLDER}
                     color="black"
-                    value="Los Angeles, CA"
+                    value={address}
                     autoCapitalize="none"
+                    onChangeText={text => this.handleChange('address', text)}
                   />
                 </Block>
               </Block>
               <Block row space="between">
                 <Block flex={1}>
-                  <Button color={materialTheme.COLORS.INFO}>Change Location</Button>
+                  <Button            
+                  shadowless
+                  style={styles.addToCart}
+                  color={materialTheme.COLORS.INFO}>
+                    <Text
+                    size={16} bold
+                    color={theme.COLORS.BLACK} 
+                    size={theme.SIZES.FONT}>Change Location</Text>
+                  </Button>
                   <MapView style={styles.mapStyle} />
                 </Block>
               </Block>
-              <Block row space="between">
-                <Block flex={1}>
-                  <Text bold size={14}>Upload Image</Text>
-                  <RNF_ImagePicker></RNF_ImagePicker>
+              <Block row space="between" style={{alignItems: "center"}}>
+                <Block style={{alignItems: "center", flex: 1}}>
+                  <Text style={{marginBottom: 10}} bold size={14}>Upload Image</Text>
+                  <Block style={{width: width * 0.8}}>
+                    <RNF_ImagePicker></RNF_ImagePicker>
+                  </Block> 
                 </Block>
               </Block>
               <Block row space="between">
                 <Block flex={1}>
-                  <Button
-                    shadowless
-                    style={{ height: 48,marginTop: 20,width:370 }}
-                    color={materialTheme.COLORS.BUTTON_COLOR}
+                <Button
+                  shadowless
+                  style={styles.addToCart}
+                  color={materialTheme.COLORS.INFO}
+                  onPress={() => {this.handleUpdateProfile()}}
                   >
-                    <Text
-                      color={theme.COLORS.BLACK} 
-                      size={theme.SIZES.FONT}>UPDATE</Text>
-                  </Button>
+                  <Text
+                    size={16} bold
+                    color={theme.COLORS.BLACK} 
+                    size={theme.SIZES.FONT}>UPDATE</Text>
+                </Button>
                 </Block>
               </Block>
           </Block>
         </Block>
       </Block>
+
+      <PasswordPopup 
+      setModalVisible={()=>this.setState({visiblePasswordModel:false})}
+      visible={this.state.visiblePasswordModel}></PasswordPopup>
+
             </ScrollView>
       </LinearGradient>
     );
@@ -136,7 +282,7 @@ export default class Settings extends React.Component {
 
 const styles = StyleSheet.create({
   profile: {
-    marginTop: Platform.OS === 'android' ? -HeaderHeight : 0,
+    marginTop: 0,
   },
   profileImage: {
     width: width * 1.1,
@@ -205,4 +351,32 @@ const styles = StyleSheet.create({
     marginTop:12,
     marginBottom:12
   },
+  addToCart: {
+    width: width - theme.SIZES.BASE * 4,
+    marginTop: theme.SIZES.BASE * 2,
+    shadowColor: "rgba(0, 0, 0, 0.2)",
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    shadowOpacity: 1
+  },
 });
+
+const mapDispatchToProps = (dispatch) => ({
+  getProfileData: (data) => dispatch(profileApiCall(data)),
+  callUpdateProfile: (data) => dispatch(callUpdateProfile(data)),
+})
+
+const mapStateToProps = (state) => ({
+  profileData: state.profileData,
+  isLoading: state.isLoading,
+})
+
+const container = compose(
+  connect(
+      mapStateToProps,
+      mapDispatchToProps
+  ),
+  withLoadingScreen
+)
+
+export default compose(container)(Settings)

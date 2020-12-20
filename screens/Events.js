@@ -1,14 +1,27 @@
 import React from 'react';
 import { StyleSheet, Dimensions, ScrollView } from 'react-native';
 import { Button, Block, Text, Input, theme } from 'galio-framework';
+import withLoadingScreen from '../HOC/spinner';
 
 import { LinearGradient } from 'expo-linear-gradient';
 import { Icon, Product } from '../components';
 
 const { width } = Dimensions.get('screen');
 import homeImages from '../constants/images/home';
+import { compose } from "recompose"
 
-export default class Events extends React.Component {
+import { connect } from 'react-redux'
+import { profileApiCall } from '../actions';
+
+class Events extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+  
+  componentDidMount() {
+    this.props.getProfileData()
+  }
+
   renderSearch = () => {
     const { navigation } = this.props;
     const iconContent = <Icon size={16} color={theme.COLORS.MUTED} name="zoom-in" family="material" />
@@ -31,13 +44,20 @@ export default class Events extends React.Component {
 
     return (
       <Block row style={styles.tabs}>
-        <Button shadowless style={[styles.tab, styles.divider]} onPress={() => navigation.navigate('Categories')}>
+        <Button shadowless style={[styles.tab, styles.divider]} onPress={() => 
+          {// navigation.navigate('Categories')
+        }
+          }>
           <Block row middle>
             {/* <Icon name="grid" family="feather" style={{  }} /> */}
             <Text size={16} style={styles.tabTitle}>Events Nearby</Text>
           </Block>
         </Button>
-        <Button shadowless style={styles.tab} onPress={() => navigation.navigate('Deals')}>
+        <Button shadowless style={styles.tab} onPress={() => 
+          {
+            //navigation.navigate('Deals')
+          }
+          }>
           <Block row middle>
             {/* <Icon size={16} name="camera-18" family="GalioExtra" style={{  }} /> */}
             <Text size={16} style={styles.tabTitle}>Events By Followers</Text>
@@ -107,7 +127,7 @@ const styles = StyleSheet.create({
   },
   tabs: {
     marginBottom: 24,
-    marginTop: 10,
+    marginTop: 44,
     elevation: 4,
   },
   tab: {
@@ -131,3 +151,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
 });
+
+const mapDispatchToProps = (dispatch) => ({
+  getProfileData: (data) => dispatch(profileApiCall(data)),
+})
+
+const mapStateToProps = (state) => ({
+  authData: state.authData,
+})
+
+const container = compose(
+  connect(
+      mapStateToProps,
+      mapDispatchToProps
+  ),
+  withLoadingScreen
+)
+
+export default compose(container)(Events)
