@@ -47,6 +47,7 @@ import { tabs } from "../constants/";
 import Events from "../screens/Events";
 import Logout from "../screens/Logout";
 import Home from "../screens/Home";
+import MapScreen from "../screens/MapScreen";
 
 const { width } = Dimensions.get("screen");
 
@@ -611,7 +612,7 @@ function AppStack(props) {
         }}
       />
       <Drawer.Screen
-        name="Add Event"
+        name="Host"
         component={HostEventStack}
         options={{
           drawerIcon: ({ focused }) => (
@@ -789,6 +790,20 @@ export default function OnboardingStack() {
             />
           )
         }}
+      />    
+      <Stack.Screen
+        name="MapScreen"
+        component={MapScreen}
+        options={{
+          header: ({ navigation, scene }) => (
+            <Header
+            back
+            title="Privacy"
+            scene={scene}
+            navigation={navigation}
+          />
+          )
+        }}
       />     
   </Stack.Navigator>
   )
@@ -829,30 +844,16 @@ function dashboardStack (props) {
               <MaterialCommunityIcons name="calendar" color={color} size={size} />
             ),
           }}
-        /> */}
-         <Tab.Screen
-          name="Settings"
-          component={SettingsScreen}
-          options={{
-            tabBarLabel: 'Settings',
-            tabBarIcon: ({ color, size }) => (
-              <MaterialCommunityIcons
-                name="settings"
-                color={color}
-                size={size}
-              />
-            ),
-          }}
-        />
+        /> */}       
         <Tab.Screen
-          name="Add Event"
+          name="Host"
           component={HostEventScreen}
           options={{
             labelStyle:{
               color: "white", 
               numberOfLines:2
             },
-            tabBarLabel: 'Add Event',
+            tabBarLabel: 'Host',
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons name="calendar-account" color={color} size={size} />
             ),
@@ -871,7 +872,21 @@ function dashboardStack (props) {
               />
             ),
           }}
-        />       
+        />      
+          <Tab.Screen
+          name="Settings"
+          component={SettingsScreen}
+          options={{
+            tabBarLabel: 'Settings',
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons
+                name="settings"
+                color={color}
+                size={size}
+              />
+            ),
+          }}
+        /> 
          <Tab.Screen
           name="Logout"
           component={Logout}
