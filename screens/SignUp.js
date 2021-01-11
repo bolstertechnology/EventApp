@@ -4,17 +4,15 @@ import { Alert, Dimensions, StyleSheet, KeyboardAvoidingView, Platform, Image } 
 import { Block, Button, Input, Text, theme } from 'galio-framework';
 
 import { LinearGradient } from 'expo-linear-gradient';
-import { materialTheme, utils } from '../constants/';
+import { materialTheme } from '../constants/';
 import { hasWhiteSpace, HeaderHeight, validatePassword } from "../constants/utils";
 import { compose } from "recompose"
 import { callSignUp } from '../actions';
 import { connect } from 'react-redux'
 import withLoadingScreen from '../HOC/spinner';
 import { StackActions } from '@react-navigation/native';
-import RNDateTimePicker from '@react-native-community/datetimepicker';
 import RNC_DTPicker from '../components/RNC_DTPicker';
-const { height, width } = Dimensions.get('window');
-import {Picker} from '@react-native-community/picker';
+const { width } = Dimensions.get('window');
 
 class SignUp extends React.Component {
   state = {

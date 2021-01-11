@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Dimensions, KeyboardAvoidingView, Alert, Platform } from 'react-native';
+import {View, ActivityIndicator, StyleSheet, Dimensions, KeyboardAvoidingView, Alert, Platform, Image } from 'react-native';
 import { Block, Button, Input, Text, theme } from 'galio-framework';
 
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,6 +7,8 @@ import { materialTheme } from '../constants';
 import { HeaderHeight, validatePassword } from "../constants/utils";
 import { compose } from "recompose"
 import { container } from './ForgotPasswordIndex';
+import { ScrollView } from 'react-native-gesture-handler';
+import { StackActions } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
@@ -27,7 +29,9 @@ class ForgotPassword extends React.Component {
         otp: false,
         password: false,
         confirmPassword: false,
-      }
+      },
+      displayOtp: false,
+      isLoading: false
     }
   }
 
@@ -45,7 +49,15 @@ class ForgotPassword extends React.Component {
     this.setState({ active });
   }
 
+  setLoaderValue() {
+    this.setState({
+      isLoading: !this.state.isLoading
+    })
+  }
+
   handleForgotPassword() {
+    this.setLoaderValue()
+
     // const { navigation } = this.props;
     // const {email, otp, password, confirmPassword, displayPassword} = this.state
     // if (email.length === 0 && (this.state.displayOtp == false) && (this.state.displayPassword == false)) {
@@ -74,6 +86,7 @@ class ForgotPassword extends React.Component {
     const request = {
       email: this.state.email,
       callback: (response) => {
+        this.setLoaderValue()
         if (response.success) {   
           console.log("I am here")
           this.setState({
@@ -88,10 +101,12 @@ class ForgotPassword extends React.Component {
   }
 
   verifyOTP () {
+    this.setLoaderValue()
     const request = {
       email: this.state.email,
       otp: this.state.otp,
       callback: (response) => {
+        this.setLoaderValue()
         if (response.success) {   
           console.log("I am here")
           this.setState({
@@ -107,16 +122,18 @@ class ForgotPassword extends React.Component {
   }
 
   resetPassword () {
+    this.setLoaderValue()
     const request = {
       email: this.state.email,
       password: this.state.password,
       token: this.state.token,
       callback: (response) => {
+        this.setLoaderValue()
         if (response.success) {   
-          console.log("I am here")
-          this.setState({
-            displayPassword: true,
-          },() => function() {console.log("otp status 1", this.state.displayOtp)})             
+          Alert.alert(response.message)
+          const { navigation } = this.props;
+          const popAction = StackActions.pop(1);
+          navigation.dispatch(popAction);    
         } else {
           Alert.alert(response.message)
         }     
@@ -125,9 +142,30 @@ class ForgotPassword extends React.Component {
     this.props.callChangePassword(request)
   }
 
+  renderSpinner() {
+    return (
+      <View
+      style={{
+          backgroundColor: "black",
+          height: "100%",
+          width: "100%",
+          opacity: 0.7,
+          alignItems: "center",
+          justifyContent: "space-around",
+          zIndex: 999999,
+          position: "absolute"
+      }}
+      >
+        <ActivityIndicator             
+          size="small" 
+          color="white" />
+      </View>
+    )
+  }
+
   render() {
     const { navigation } = this.props;
-    const { email, password , displayOtp} = this.state;
+    const { displayPassword , displayOtp, isLoading} = this.state;
     console.log("otp status", displayOtp)
     return (
       <LinearGradient
@@ -137,15 +175,19 @@ class ForgotPassword extends React.Component {
         colors={['#000000', '#000000']}
         style={[styles.signin, {flex: 1, paddingTop: theme.SIZES.BASE * 4}]}>
         <Block flex middle>
-          <KeyboardAvoidingView behavior="padding" enabled>            
-            <Block middle style={{ paddingVertical: theme.SIZES.BASE * 2.625}}>
-              <Text center color="black" size={18}>
-                Forgot Password
-              </Text>
+          <KeyboardAvoidingView behavior="padding" enabled>   
+          <ScrollView>         
+            <Block middle>
+            <Image
+            style={{width: width * 0.8, height: 150}}
+                  resizeMode="center"
+                  source={require("../assets/images/banner.png")}
+              ></Image>
             </Block>
             <Block flex>
-              <Block center>
+              {!displayPassword && <Block center>
                 <Input
+                  editable={!displayOtp}
                   borderless
                   color="white"
                   placeholder="Email"
@@ -158,32 +200,22 @@ class ForgotPassword extends React.Component {
                   onChangeText={text => this.handleChange('email', text)}
                   style={[styles.input, this.state.active.email ? styles.inputActive : null]}
                 />                               
-              </Block>
-              <Block flex top style={{ marginTop: 20 }}>
-                <Button
+              </Block>}
+              <Block flex top style={styles.passwordContainerStyle}>
+                {!displayPassword && <Button
                   disabled={displayOtp}
                   shadowless
-                  color={materialTheme.COLORS.BUTTON_COLOR}
+                  color={displayOtp ? materialTheme.COLORS.DISABLE_BUTTON_COLOR : materialTheme.COLORS.BUTTON_COLOR}
                   style={{ height: 48 }}
                   onPress={() => this.handleForgotPassword()}
                 >
-                  {/* Alert.alert('Sign in action',`Email: ${email} Password: ${password}`,) */}
                   <Text
                     color={theme.COLORS.BLACK} 
                     size={theme.SIZES.FONT}>SEND OTP ON EMAIL</Text>
-                </Button>
-                <Button color="transparent" shadowless onPress={() => navigation.navigate('Sign Up')}>
-                  <Text
-                    center
-                    color={theme.COLORS.WHITE}
-                    size={theme.SIZES.FONT * 0.75}
-                    style={{marginTop:20}}
-                  >
-                    {"Don't have an account? Sign Up"}
-                  </Text>
-                </Button>
-                {displayOtp && <Block><Input
+                </Button>}       
+                {!displayPassword && displayOtp && <Block style={styles.passwordContainerStyle}><Input
                   borderless
+                  editable={!displayPassword}
                   color="white"
                   placeholder="OTP"
                   autoCapitalize="none"
@@ -196,9 +228,11 @@ class ForgotPassword extends React.Component {
                 />
                 <Button
                   shadowless
+                  disabled={displayPassword}
                   color={materialTheme.COLORS.BUTTON_COLOR}
-                  style={{ height: 48 }}
+                  style={{ height: 48 }, styles.passwordContainerStyle}
                   onPress={() => this.verifyOTP()}
+                  color={displayPassword ? materialTheme.COLORS.DISABLE_BUTTON_COLOR : materialTheme.COLORS.BUTTON_COLOR}
                 >
                   <Text
                     color={theme.COLORS.BLACK} 
@@ -206,9 +240,10 @@ class ForgotPassword extends React.Component {
                 </Button>
                 </Block>
                 }
-                {this.state.displayPassword && <Block>
+                {displayPassword && <Block style={styles.passwordContainerStyle}>
                   <Input
                   borderless
+                  password
                   color="white"
                   placeholder="Password"
                   autoCapitalize="none"
@@ -221,6 +256,7 @@ class ForgotPassword extends React.Component {
                 />
                 <Input
                   borderless
+                  password
                   color="white"
                   placeholderTextColor="white"
                   placeholder="Confirm Password"
@@ -233,10 +269,10 @@ class ForgotPassword extends React.Component {
                   onChangeText={text => this.handleChange('confirmPassword', text)}
                   style={[styles.input, this.state.active.confirmPassword ? styles.inputActive : null]}                  
                 />
-                                <Button
+                <Button
                   shadowless
                   color={materialTheme.COLORS.BUTTON_COLOR}
-                  style={{ height: 48 }}
+                  style={{ height: 48 }, styles.passwordContainerStyle}
                   onPress={() => this.resetPassword()}
                 >
                   <Text
@@ -244,10 +280,22 @@ class ForgotPassword extends React.Component {
                     size={theme.SIZES.FONT}>CHANGE PASSWORD</Text>
                 </Button>
                   </Block>}
+                  <Button color="transparent" shadowless onPress={() => navigation.navigate('Sign Up')}>
+              <Text
+                center
+                color={theme.COLORS.WHITE}
+                size={theme.SIZES.FONT * 0.75}
+                style={{marginTop:20}}
+              >
+                {"Don't have an account? Sign Up"}
+              </Text>
+            </Button>
               </Block>
             </Block>
+            </ScrollView>
           </KeyboardAvoidingView>
         </Block>
+        {isLoading && this.renderSpinner()}
       </LinearGradient>
     );
   }
@@ -279,6 +327,9 @@ const styles = StyleSheet.create({
   inputActive: {
     borderBottomColor: "white",
   },
+  passwordContainerStyle: {
+    marginTop: 20,
+  }
 });
 
 export default compose(container)(ForgotPassword)

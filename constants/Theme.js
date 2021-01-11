@@ -23,7 +23,9 @@ export default {
     TEXT:'#0A0A0A',
     BACK:'#F2AF5A',
     MAIN_COLOR:'#000000',
-    SUB_COLOR:'#000000'
+    WHITE:'#FFFFFF',
+    SUB_COLOR:'#000000',
+    DISABLE_BUTTON_COLOR: 'rgba(244, 189, 116,0.4)'
   },
   SIZES: {
     BLOCK_SHADOW_RADIUS: 5,

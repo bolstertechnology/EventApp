@@ -1,23 +1,24 @@
 import React, { Component } from 'react';
-import { View,Button,Platform } from 'react-native';
+import { View,Dimensions,Text } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+const { width } = Dimensions.get('window');
+import moment from "moment";
 
 export default class RNC_DTPicker extends Component {
     state={
-        date: new Date(1598051730000),
+        date: new Date(),
         mode:'date',
-        show:false
+        show:true
     }
-    setDate=(event,date)=>{
-        date=date||this.state.state
+    onChange = (event, selectedDate) => {
+        const currentDate = selectedDate || date;
         this.setState({
-            show:Platform.OS==='ios',
-            date,
+            date: currentDate,
         });
-    }
+    };
     show=mode=>{
         this.setState({
-            show:true,
+            show:!this.state.show,
             mode,
         });
     }
@@ -28,25 +29,23 @@ export default class RNC_DTPicker extends Component {
         this.show('time');
     }
     render(){
-        const {show,date,mode} = this.state;
-        return (                       
-            <View>
-                <View>
-                    <Button onPress={this.datepicker} title="select event date">
-                    </Button>
-                </View>
-                {/* <View>
-                    <Button onPress={this.timepicker} title="show time picker">
+        const {show, date} = this.state;
+        let maxdate = date;
+        maxdate = moment(new Date()).subtract(18, "years").toISOString(); // for specific format
 
-                    </Button>
-                </View> */}
+        return (                       
+            <View style={{alignItems: "center", flexDirection: "row", height: 50,width: width * 0.9, justifyContent: "center", right: 20}}>
+                    {/* <Text style={{ color:"black", flexDirection: "row",width: width * 0.5, textAlign :"center"}}>Select Birthdate</Text> */}
                 {
-                    show && (<DateTimePicker                     
-                        mode={mode}
-                        is24Hour={true}
-                        display='default'
-                        onChange={()=>this.setDate}
-                        value={date}
+                    show && (
+                    <DateTimePicker   
+                    style={{height: 50, width: width , color: "white"}}
+                    textColor="white"
+                    display="inline"                  
+                    mode={"date"}
+                    onChange={this.onChange}
+                    maximumDate={maxdate}                  
+                    value={date}
                     ></DateTimePicker>)
                 }
             </View>
